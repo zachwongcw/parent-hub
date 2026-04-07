@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sage-50: #f4f7f4;
+  --color-sage-100: #e4ebe4;
+  --color-sage-200: #c9d8c9;
+  --color-sage-300: #a1bfa1;
+  --color-sage-400: #74a074;
+  --color-sage-500: #548354;
+  --color-sage-600: #426842;
+  --color-sage-700: #365336;
+  --color-sage-800: #2d452d;
+  --color-sage-900: #253925;
+  --color-sage-950: #121e12;
+
+  --color-warmgrey-50: #fafaf9;
+  --color-warmgrey-100: #f5f5f4;
+  --color-warmgrey-200: #e7e5e4;
+  --color-warmgrey-300: #d6d3d1;
+  --color-warmgrey-400: #a8a29e;
+  --color-warmgrey-500: #78716c;
+  --color-warmgrey-600: #57534e;
+  --color-warmgrey-700: #44403c;
+  --color-warmgrey-800: #292524;
+  --color-warmgrey-900: #1c1917;
+  --color-warmgrey-950: #0c0a09;
+
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-sage-50 text-warmgrey-900 font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/60 backdrop-blur-md border border-white/50 shadow-sm;
+  }
+  
+  .glass-sage {
+    @apply bg-sage-500/80 backdrop-blur-md border border-sage-400/50 shadow-md text-white;
+  }
+  
+  .glass-dark {
+    @apply bg-warmgrey-900/80 backdrop-blur-md border border-warmgrey-700/50 shadow-md text-white;
+  }
+}
