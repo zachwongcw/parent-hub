@@ -9,26 +9,56 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // MVP Mock implementation for Gemma LLM Response
-  const lastMessage = messages[messages.length - 1].content.toLowerCase();
-  
-  let reply = "I understand. I am currently operating in a demonstration mode, so my knowledge base is limited. However, your feedback has been securely logged.";
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY is missing");
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
 
-  // Level 1: Administrative Deflection Mock
-  if (lastMessage.includes('sick leave')) {
-    reply = "To apply for sick leave, please submit a doctor's certificate via the eClass app within 2 days of returning to school, or contact the General Office at 2987-xxxx.";
-  } else if (lastMessage.includes('uniform')) {
-    reply = "The winter uniform policy requires a thick navy blue coat. If temperatures drop below 12°C, students may wear their own plain black or navy winter jacket.";
-  } else if (lastMessage.includes('behavior') || lastMessage.includes('struggle')) {
-    // Level 2/2.5 Mock (Psychological first aid & Escalation)
-    reply = "Thank you for sharing your concerns about Student " + studentId + ". It's completely normal to feel worried when your child faces challenges. I have securely notified the class teacher and our support team to monitor the situation. Is there any specific antecedent (e.g., a certain subject) where you notice this the most?";
-  } else if (lastMessage.includes('hurt') || lastMessage.includes('police')) {
-    // Level 3 Crisis Override
-    reply = "WARNING: It sounds like you are experiencing an emergency. Please contact emergency services (999) or the Social Welfare Department hotline (2343 2255) immediately. This alert has been forwarded to the school crisis management team.";
+    // Convert frontend messages to Gemini format
+    const geminiMessages = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    const systemPrompt = `You are a triage assistant for a Parent Information Hub for a primary school.
+Student ID in context: ${studentId}.
+Your goal is to provide polite, supportive answers using standard school policies and Psychological First Aid.
+Keep your answers structured, empathetic, and do not diagnose any clinical conditions.`;
+
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: geminiMessages,
+      generationConfig: {
+        maxOutputTokens: 1000,
+        temperature: 0.7,
+      }
+    };
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API Error:", errorText);
+      throw new Error('API Error');
+    }
+
+    const data = await response.json();
+    const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't understand that.";
+
+    res.status(200).json({ reply: replyText });
+
+  } catch (error) {
+    console.error("Chat API error:", error);
+    res.status(500).json({ reply: "I'm having trouble connecting to my AI brain right now. Please try again later." });
   }
-
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-
-  res.status(200).json({ reply });
 }
