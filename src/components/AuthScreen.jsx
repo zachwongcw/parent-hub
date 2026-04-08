@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 
-export default function AuthScreen({ onLogin }) {
+export default function AuthScreen({ onLogin, onAdminLogin }) {
   const [studentId, setStudentId] = useState('');
   const [error, setError] = useState('');
 
@@ -11,6 +11,12 @@ export default function AuthScreen({ onLogin }) {
       setError('Please enter a valid Student ID.');
       return;
     }
+
+    if (studentId.trim().toUpperCase() === 'ADMIN') {
+      onAdminLogin();
+      return;
+    }
+
     // simple mock validation
     if (studentId.length < 4) {
       setError('Student ID must be at least 4 characters long.');
