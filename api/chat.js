@@ -63,9 +63,10 @@ async function verifyGoogleAuth() {
   if (!credentialsStr) return null;
   
   // Vercel sometimes mangles the \n into actual physical newlines during copy-pasting.
-  // This surgically escapes ONLY the newlines inside the private key string literal.
-  credentialsStr = credentialsStr.replace(/-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----/g, (match) => {
-    return match.replace(/\r?\n/g, '\\n');
+  // This surgically escapes ONLY the newlines inside the private_key string literal,
+  // including any trailing newlines just before the closing quote.
+  credentialsStr = credentialsStr.replace(/"private_key"\s*:\s*"([^"]+)"/g, (match, p1) => {
+    return `"private_key": "${p1.replace(/\r?\n/g, '\\n')}"`;
   });
 
   const credentials = JSON.parse(credentialsStr);
