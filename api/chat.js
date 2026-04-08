@@ -1,3 +1,71 @@
+import { google } from 'googleapis';
+
+// Cache for Google Drive Content
+let cachedDriveContext = "";
+let lastFetchTime = 0;
+const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+
+async function fetchGoogleDriveContext() {
+  if (cachedDriveContext && (Date.now() - lastFetchTime < CACHE_TTL_MS)) {
+    return cachedDriveContext;
+  }
+
+  const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const rawFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+  
+  if (!credentialsStr || !rawFolderId) return "";
+
+  try {
+    const folderId = rawFolderId.split('?')[0];
+    const credentials = JSON.parse(credentialsStr);
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+    });
+    const drive = google.drive({ version: 'v3', auth });
+
+    const response = await drive.files.list({
+      q: `'${folderId}' in parents and trashed = false`,
+      fields: 'files(id, name, mimeType)',
+    });
+
+    const files = response.data.files || [];
+    let combinedContext = "\n\n【學校內部參考文件庫 (School Policy Knowledge Base)】\n";
+
+    if (files.length === 0) {
+      console.warn("Google Drive Folder is empty or inaccessible.");
+      return "";
+    }
+
+    for (const file of files) {
+      try {
+        if (file.mimeType === 'application/vnd.google-apps.document') {
+          const docExport = await drive.files.export({
+            fileId: file.id,
+            mimeType: 'text/plain',
+          });
+          combinedContext += `\n--- 檔案名稱: ${file.name} ---\n${docExport.data}\n`;
+        } else if (file.mimeType.startsWith('text/')) {
+          const textFile = await drive.files.get({
+            fileId: file.id,
+            alt: 'media',
+          });
+          combinedContext += `\n--- 檔案名稱: ${file.name} ---\n${textFile.data}\n`;
+        }
+      } catch (fileErr) {
+        console.error(`Failed to fetch file ${file.name}:`, fileErr.message);
+      }
+    }
+
+    cachedDriveContext = combinedContext;
+    lastFetchTime = Date.now();
+    return cachedDriveContext;
+  } catch (error) {
+    console.error("Failed to fetch Google Drive context:", error.message);
+    return "";
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -122,9 +190,12 @@ export default async function handler(req, res) {
 啟動指令
 現在，請等待使用者（家長）的第一句話。一旦開始，請進入角色，運用 HEARD 模式進行開場。`;
 
+    const driveKnowledge = await fetchGoogleDriveContext();
+    const fullSystemPrompt = systemPrompt + driveKnowledge;
+
     const requestBody = {
       systemInstruction: {
-        parts: [{ text: systemPrompt }]
+        parts: [{ text: fullSystemPrompt }]
       },
       contents: geminiMessages,
       generationConfig: {
