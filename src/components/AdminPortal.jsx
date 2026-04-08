@@ -61,14 +61,24 @@ export default function AdminPortal({ onClose }) {
           </button>
 
           {syncStatus === 'success' && (
-            <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-lg text-sm flex items-start space-x-2 border border-green-200">
-              <Eye className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold mb-1">Synchronization Successful</p>
-                <p>The global system cache has been refreshed. The chatbot is now using the newest instructions and documents from your Google Drive.</p>
-                {syncedData?.customPrompt && (
-                  <p className="mt-2 text-xs font-mono bg-white p-2 rounded block">✅ Custom SYSTEM_PROMPT document found and applied!</p>
-                )}
+            <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-lg text-sm flex flex-col space-y-4 border border-green-200">
+              <div className="flex items-start space-x-2">
+                <Eye className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold mb-1">Synchronization Successful</p>
+                  <p>The global system cache has been refreshed. The chatbot is now using the newest instructions and documents from your Google Drive.</p>
+                  <p className="mt-2 text-xs font-mono bg-white p-2 rounded block border border-green-300">
+                    {syncedData?.customPrompt ? '✅ Custom SYSTEM_PROMPT document found and applied!' : '⚠️ No SYSTEM_PROMPT found. Using Default Codebase Prompt.'}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-2">
+                <p className="font-bold text-xs uppercase tracking-wide mb-2 text-green-900">Actively Running System Prompt (Read-only Preview):</p>
+                <textarea 
+                  readOnly 
+                  className="w-full h-48 p-3 text-xs font-mono bg-green-900 text-green-50 rounded-lg border-none focus:ring-0 opacity-90"
+                  value={syncedData?.customPrompt || "Default System Prompt is running..."}
+                />
               </div>
             </div>
           )}

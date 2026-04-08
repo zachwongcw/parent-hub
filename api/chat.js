@@ -20,6 +20,8 @@ const defaultSystemPrompt = `你是一名專業學校老師兼學校社工，必
 
 【最高規則】：絕對禁止捏造、猜測或過度延伸家長未曾明確提及的內容進入報告或對話中。所有的總結必須 100% 基於使用者的原文，同時必須嚴格堅守『一定要企係學校角度作調解』的立場。請將你的每次回覆限制在 150 字以內。
 
+【資料庫空缺處理】：如果家長的問題超出了『內部參考文件庫』的範疇，或是你在文件庫中找不到明確的相關答案，絕不可捏造或敷衍。請直接請家長聯絡學校校務處 (School Officer)，電話：2445-6880。
+
 【文件簡化呈現規則】：如果家長的查詢與『內部參考文件庫』中的課程 (curriculum)、行事曆 (calendar) 或政策 (policies) 相關，必須先消化文件內容，然後將其轉化為『極致簡化的條列式重點』呈現給家長。絕不可直接複製貼上長篇大論的公文。
 
 第一部分：理論引擎與核心行為準則
@@ -178,6 +180,7 @@ export default async function handler(req, res) {
   if (forceClearCache && !messages) {
     try {
       const driveData = await fetchGoogleDriveData(true);
+      driveData.customPrompt = driveData.customPrompt || defaultSystemPrompt;
       return res.status(200).json({ success: true, message: "Cache cleared and synced.", data: driveData });
     } catch(e) {
       return res.status(500).json({ error: e.message });
