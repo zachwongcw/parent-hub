@@ -59,8 +59,15 @@ const defaultSystemPrompt = `你是一名專業學校老師兼學校社工，必
 }`;
 
 async function verifyGoogleAuth() {
-  const credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  let credentialsStr = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (!credentialsStr) return null;
+  
+  // Vercel sometimes mangles the \n into actual physical newlines during copy-pasting.
+  // This surgically escapes ONLY the newlines inside the private key string literal.
+  credentialsStr = credentialsStr.replace(/-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----/g, (match) => {
+    return match.replace(/\r?\n/g, '\\n');
+  });
+
   const credentials = JSON.parse(credentialsStr);
   const auth = new google.auth.GoogleAuth({
     credentials,
