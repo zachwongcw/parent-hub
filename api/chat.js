@@ -148,10 +148,10 @@ async function logToGoogleSheet(studentId, enquiry, concerns, emotions, reply) {
     if (!auth) return;
     const sheets = google.sheets({ version: 'v4', auth });
     
-    // Attempt to append to Sheet1 (this assumes default Google Sheet layout)
+    // Attempt to append to the default first sheet (handles 'Sheet1' and '工作表1')
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: 'Sheet1!A:F',
+      range: 'A:F',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[

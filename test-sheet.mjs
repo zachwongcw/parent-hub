@@ -23,7 +23,7 @@ async function testSheet() {
     
     const result = await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'Sheet1!A:F',
+      range: 'A:F',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[
