@@ -233,6 +233,14 @@ export default function ChatInterface({ studentId, onLogout }) {
             <Send className="w-5 h-5" />
           </button>
         </div>
+
+        <div className="max-w-3xl mx-auto mt-2 pl-2 opacity-50 pointer-events-none transition-all duration-300">
+          <div className="text-left flex items-center space-x-1">
+            <span className="text-[10px] uppercase font-mono tracking-wider font-semibold text-warmgrey-600">
+              {isOfflineMode ? `🟢 Local Engine: ${offlineModelName}` : '☁️ Cloud Engine: Gemini 2.5 Flash'}
+            </span>
+          </div>
+        </div>
       </footer>
     </div>
   );
