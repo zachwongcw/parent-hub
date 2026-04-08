@@ -240,6 +240,9 @@ export default async function handler(req, res) {
     }
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error(`QUOTA_EXHAUSTED: Google Gemini API Rate Limit Reached (Please wait 1 minute before trying again)`);
+      }
       throw new Error(`Gemini API Error: ${response.status} ${fallbackErrorText}`);
     }
 
@@ -268,10 +271,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Chat API error:", error.message || error);
+    
+    const isQuota = error.message.includes('QUOTA_EXHAUSTED');
     res.status(500).json({ 
       error: 'Backend API Error',
-      reply: "I'm having trouble connecting to my AI brain right now. Please try again later.",
-      debugMessage: error.message 
+      reply: isQuota ? "伺服器目前查詢量過大 (Google API Rate Limit)。請稍候 1 分鐘後再重新發送訊息。" : "我現在的大腦連線遇到了一點小問題，請稍後再試。",
+      debugMessage: isQuota ? "Gemini Free Tier API Rate Limit exceeded (Wait 60s)" : error.message 
     });
   }
 }
