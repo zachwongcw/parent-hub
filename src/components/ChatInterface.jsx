@@ -81,14 +81,31 @@ export default function ChatInterface({ studentId, onLogout }) {
     if (isOfflineMode && mlcEngineRef.current) {
       try {
         const offMessages = messages.map(m => ({ role: m.role, content: m.content })).concat({ role: 'user', content: text });
+        
         // Inject a simple static system prompt since RAG context isn't available
         const systemPrompt = { role: 'system', content: '你是「家長同行者」，一個專為小學家長設計的離線智能支援助手。盡量以簡短、得體的廣東話或繁體中文回應。'};
-        
+
         const reply = await mlcEngineRef.current.chat.completions.create({
           messages: [systemPrompt, ...offMessages]
         });
 
-        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', content: reply.choices[0].message.content }]);
+        const replyText = reply.choices[0].message.content;
+        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', content: replyText }]);
+
+        // Try to sync to backend if online
+        if (navigator.onLine) {
+          fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              logOnly: true, 
+              studentId, 
+              userText: text, 
+              assistantReply: replyText 
+            })
+          }).catch(e => console.error("Could not sync offline log", e));
+        }
+
       } catch (err) {
         setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', content: `離線推論發生錯誤: ${err.message}` }]);
       } finally {

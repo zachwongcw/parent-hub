@@ -175,7 +175,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { messages, studentId, forceClearCache } = req.body;
+  const { messages, studentId, forceClearCache, logOnly, userText, assistantReply } = req.body;
+
+  if (logOnly) {
+    if (studentId && userText && assistantReply) {
+       await logToGoogleSheet(studentId, "[Offline Model Log]", userText, "", assistantReply);
+       return res.status(200).json({ success: true });
+    }
+    return res.status(400).json({ error: 'Missing fields for logOnly' });
+  }
 
   if (forceClearCache && !messages) {
     try {
