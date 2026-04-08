@@ -39,16 +39,24 @@ export default function ChatInterface({ studentId, onLogout }) {
         body: JSON.stringify({ messages: [...messages, userMsg], studentId })
       });
 
-      if (!response.ok) throw new Error('API Error');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.debugMessage || errorData.error || `HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', content: data.reply }]);
     } catch (error) {
-      console.error(error);
+      console.error('Chat error:', error);
+      
+      // Determine if we should show debug info (in a real app this would be guarded by an env flag)
+      const isDebugMode = true; 
+      const debugText = isDebugMode ? `\n\n[Debug Info: ${error.message}]` : '';
+
       setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
         role: 'assistant', 
-        content: "I'm having trouble connecting to the system right now. Please try again later or contact the general office." 
+        content: `I'm having trouble connecting to the system right now. Please try again later or contact the general office.${debugText}` 
       }]);
     } finally {
       setIsLoading(false);
