@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.48.0",
+    "@mlc-ai/web-llm": "^0.2.82",
     "@supabase/supabase-js": "^2.102.1",
     "@tailwindcss/vite": "^4.2.2",
     "clsx": "^2.1.1",
